@@ -11,6 +11,15 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you update your profile image.",
+          "cameraPermission": "The app accesses your camera to let you update your profile image."
+        }
+      ]
+    ],
     "assetBundlePatterns": [
       "**/*"
     ],
