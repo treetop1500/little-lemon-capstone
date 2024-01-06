@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, Button, Image } from 'react-native';
 import Onboarding from './screens/Onboarding';
 import Profile from './screens/Profile';
 import Splash from './screens/Splash';
+import Home from './screens/Home';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Logo } from './assets/images/Logo.png';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,7 +14,11 @@ import 'react-native-gesture-handler';
 import useFonts from './hooks/useFonts';
 import AvatarPlaceholder from './components/AvatarPlaceholder';
 import Avatar from './components/Avatar';
+import { LogBox } from 'react-native';
 
+LogBox.ignoreLogs([
+  'Non-serializable values were found in the navigation state',
+]);
 
 function LogoTitle() {
   return (
@@ -21,14 +26,6 @@ function LogoTitle() {
       style={styles.headerLogo}
       source={require('./assets/images/Logo.png')}
     />
-  );
-}
-
-function HomeScreen() {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Home Screen</Text>
-    </View>
   );
 }
 
@@ -58,7 +55,8 @@ export default function App({navigation}) {
   };
 
   const headerAvatar = (navigation) => {
-    if (isProfileLoaded && userProfile.avatar !==  null) {
+    console.log('navigation', navigation)
+    if (isProfileLoaded && userProfile !==  null) {
       return (<Avatar uri={userProfile.avatar } style='micro' 
         onPress={() => navigation.navigate('Profile')}
       />)
@@ -100,18 +98,24 @@ export default function App({navigation}) {
             drawerItemStyle: isOnboardingCompleted !== true && {display: 'none'}
           }}
         />
-        <Drawer.Screen name="Home" component={HomeScreen}
+        <Drawer.Screen
+          name="Home"
+          component={Home}
           initialParams={{ user: userProfile }}
-          options={{ 
+          options={{
             headerTitle: (props) => <LogoTitle {...props} />,
-            headerRight: () => (headerAvatar()),
-          }}/>
-        <Drawer.Screen name="Profile" component={Profile}
+            headerRight: ({ navigation }) => headerAvatar(navigation),
+          }}
+        />
+        <Drawer.Screen
+          name="Profile"
+          component={Profile}
           initialParams={{ onChangeProfile: loadProfile }}
           options={{
             headerTitle: (props) => <LogoTitle {...props} />,
-            headerRight: () => (headerAvatar()),
-          }}/>
+            headerRight: ({ navigation }) => headerAvatar(navigation),
+          }}
+        />
       </Drawer.Navigator>
     </NavigationContainer>
   );

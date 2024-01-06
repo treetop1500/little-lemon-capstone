@@ -3,72 +3,47 @@ import React, { useState, useEffect } from 'react';
 
 export default function Button({...props}) {
 
-  const [buttonStyle, setButtonStyle] = useState(props.style);
-  const [baseStyle, setBaseStyle] = useState(null);
-  const [textStyle, setTextStyle] = useState(null);
-  useEffect(() => {
-    if (buttonStyle === 'secondary') {
-      setBaseStyle(styles.secondary);
-      setTextStyle(styles.secondaryText);
-    } else if(buttonStyle === 'logOut') {
-      setBaseStyle(styles.logOut);
-      setTextStyle(styles.logOutText);
-    } else {
-      setBaseStyle(styles.primary);
-      setTextStyle(styles.primaryText);
-    }
-  }, []);
-
   return (
-    <Pressable onPress={props.onPress} style={baseStyle}>
-      <Text style={textStyle}>
+    <Pressable onPress={props.onPress} style={[styles.button, styles[props.style]]}>
+      <Text style={[styles.buttonText, props.style != 'primary' ? styles.buttonTextAlt : styles.buttonTextPrimary]}>
         {props.title}
       </Text>
     </Pressable>
   )
-
 }
 
+
 const styles = StyleSheet.create({
-  primary: {
-    backgroundColor: '#495e57',
+  button: {
     paddingVertical: 12,
     paddingHorizontal: 22,
     borderRadius: 6,
-    marginVertical: 12,
+    textAlign: 'center',
     justifyContent: 'center',
-    alignContent: 'center'
+    alignContent: 'center',
+    marginVertical: 12,
+  },
+  primary: {
+    backgroundColor: '#495e57',
   },
   secondary: {
     borderWidth: 1,
     borderColor: '#495e57',
     backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
-    paddingHorizontal: 22,
-    borderRadius: 6,
-    marginVertical: 12,
-    justifyContent: 'center',
-    alignContent: 'center'
   },
   logOut: {
-    width: '100%',
     backgroundColor: '#f4ce14',
-    textAlign: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 22,
-    borderRadius: 6,
-    marginVertical: 12,
-    justifyContent: 'center',
-    alignContent: 'center'
+    width: '100%',
   },
-  primaryText: {
+  buttonText: {
+    fontFamily: 'Karla',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  buttonTextPrimary: {
     color: '#ffffff',
   },
-  secondaryText: {
+  buttonTextAlt: {
     color: '#495e57',
-  },
-  logOutText: {
-    color: '#000000',
-    textAlign: 'center',
   }
 })
