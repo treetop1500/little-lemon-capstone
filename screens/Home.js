@@ -32,49 +32,38 @@ export default function Home() {
     if (searchTerm == "" && selectedCategory == null) {
       return checkAndFetchData();
     } else if (searchTerm == "" && selectedCategory != null) {
-      return handleCategoryPress(selectedCategory, false);
+      return handleCategoryPress(selectedCategory,false);
     }
-  
-    const db = SQLite.openDatabase('little_lemon.db');Gr
+    const db = SQLite.openDatabase('little_lemon.db');
   
     if (searchTerm != '') {
       try {
-        const data = await new Promise((resolve, reject) => {
-          db.transaction(
-            (tx) => {
-              let query = `SELECT * FROM menu WHERE name LIKE ?`;
-              let params = [`%${searchTerm}%`];
-  
-              if (selectedCategory != null) {
-                query += ` AND category == ?`;
-                params.push(selectedCategory);
-              }
-  
-              tx.executeSql(
-                query,
-                params,
-                (_, results) => {
-                  const rows = results.rows;
-                  if (rows.length > 0) {
-                    const data = rows._array;
-                    setData(data);
-                    resolve(data);
-                  } else {
-                    resolve([]);
-                  }
-                }
-              );
-            },
-            (error) => {
-              reject(error);
+        db.transaction(
+          (tx) => {
+            let query = `SELECT * FROM menu WHERE name LIKE ?`;
+            let params = [`%${searchTerm}%`];
+      
+            if (selectedCategory != null) {
+              query += ` AND category == ?`;
+              params.push(selectedCategory);
             }
-          );
-        });
-  
-        return data;
+      
+            tx.executeSql(
+              query,
+              params,
+              (_, results) => {
+                const rows = results.rows;      
+                if (rows.length > 0) {
+                  const data = rows._array;
+                  setData(data);
+                }
+              }
+            );
+          }
+        );
       } catch (error) {
         console.error('Error in keywordSearch:', error);
-        throw error;
+        reject(error);
       }
     }
   };
@@ -82,8 +71,8 @@ export default function Home() {
   const checkAndFetchData = async () => {
     const db = SQLite.openDatabase('little_lemon.db');
   
-    try {
-      const data = await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
+      try {
         db.transaction(
           (tx) => {
             tx.executeSql(
@@ -92,38 +81,38 @@ export default function Home() {
               (_, results) => {
                 const rows = results.rows;
                 if (rows.length > 0) {
-                  const data = rows._array;
+                  const data = rows._array; 
                   setData(data);
                   resolve(data);
                 } else {
                   fetchDataAndStoreInDatabase()
                     .then((data) => {
-                      resolve(data);
+                      resolve(data); 
                     })
                     .catch((fetchError) => {
-                      reject(fetchError);
+                      console.log('fetch error', fetchError);
+                      resolve(null); 
                     });
                 }
               },
               (error) => {
-                reject(error);
-                fetchDataAndStoreInDatabase();
+                resolve(null); 
+                console.log("other error", error);
+                fetchDataAndStoreInDatabase()
               }
             );
           },
           (error) => {
-            reject(error);
+            console.log('other error 2', error)
+            resolve(null); 
           }
         );
-      });
-  
-      return data;
-    } catch (error) {
-      console.error('Error in checkAndFetchData:', error);
-      throw error;
-    }
+      } catch (error) {
+        resolve(null); 
+        fetchDataAndStoreInDatabase()
+      }
+    });
   };
-
 
   const handleCategoryPress = async (category, reset=true) => {
     setSearchTerm('');
@@ -137,7 +126,7 @@ export default function Home() {
   
     return new Promise((resolve, reject) => {
       try {
-        if (category !== selectedCategory) {
+        if (category != selectedCategory) {
           db.transaction(
             (tx) => {
               tx.executeSql(
