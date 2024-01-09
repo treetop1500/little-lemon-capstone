@@ -3,8 +3,8 @@ import { StyleSheet, Text, View, Pressable } from 'react-native';
 export default function AvatarPlaceholder({...props}) {
 
   return (
-    <Pressable onPress={props.onPress} style={props.style === 'micro' ? styles.avatarPlaceholderMicro : styles.avatarPlaceholder}>
-      <Text style={props.style === 'micro' ? styles.avatarInitialsMicro : styles.avatarInitials}>{props.firstName.charAt(0)+props.lastName.charAt(0)}</Text>
+    <Pressable onPress={props.onPress} style={props.style == 'micro' ? styles.avatarPlaceholderMicro : styles.avatarPlaceholder}>
+      <Text style={props.style == 'micro' ? styles.avatarInitialsMicro : styles.avatarInitials}>{props.firstName.charAt(0)+props.lastName.charAt(0)}</Text>
     </Pressable>
   )
 }
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatarInitialsMicro: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#ffffff',
   },
 })

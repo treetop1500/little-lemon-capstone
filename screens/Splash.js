@@ -1,22 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useCallback } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View, Image, Pressable } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import useFonts from '../hooks/useFonts';
 
 export default function Splash() {
-
-  useEffect(() => {
-    loadFonts();
-  }, []);
-
-  const loadFonts = async () => {
-    try {
-      const value = await useFonts();
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   return (
     <>

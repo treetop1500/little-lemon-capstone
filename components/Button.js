@@ -1,5 +1,4 @@
 import { StyleSheet, Text, Pressable } from 'react-native';
-import React, { useState, useEffect } from 'react';
 
 export default function Button({...props}) {
 
@@ -11,7 +10,6 @@ export default function Button({...props}) {
     </Pressable>
   )
 }
-
 
 const styles = StyleSheet.create({
   button: {

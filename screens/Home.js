@@ -1,23 +1,17 @@
-import React, { useState, useEffect, useCallback} from 'react';
-import { StyleSheet, Text, View, Image, FlatList, Pressable, TextInput } from 'react-native';
-import { useFonts } from 'expo-font';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useState, useEffect} from 'react';
+import { StyleSheet, Text, View, Image, FlatList, Pressable, TextInput, ScrollView } from 'react-native';
 import * as SQLite from 'expo-sqlite';
-import { ScrollView } from 'react-native-gesture-handler';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Button from '../components/Button';
 import { debounce } from 'lodash'; 
 
-export default function Home({navigation}) {
-  
+export default function Home() {
+
   const [data, setData] = useState([]);
   const [menuCategories, setMenuCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   
-  const debouncedKeywordSearch = debounce(async (text) => {
-    await keywordSearch(text);
+  const debouncedKeywordSearch = debounce(async () => {
+    await keywordSearch();
   }, 500);
 
   useEffect(() => {
@@ -31,51 +25,46 @@ export default function Home({navigation}) {
   }, [data]);
 
   useEffect(() => {
-    console.log(searchTerm);
-  keywordSearch(searchTerm);
     debouncedKeywordSearch(searchTerm);
   }, [searchTerm]);
 
-  useEffect(() => {
-    console.log('selectedCategory', selectedCategory);
-  }, [selectedCategory]);
-
-
   const keywordSearch = async () => {
-    console.log('keyword search');
-    if (selectedCategory != null) {
-      setSelectedCategory(null);
+    if (searchTerm == "" && selectedCategory == null) {
+      return checkAndFetchData();
+    } else if (searchTerm == "" && selectedCategory != null) {
+      return handleCategoryPress(selectedCategory,false);
     }
     const db = SQLite.openDatabase('little_lemon.db');
   
-    if (searchTerm !== '') {
-      console.log(searchTerm);
-        try {
-          db.transaction(
-            (tx) => {
-              tx.executeSql(
-                `SELECT * FROM menu WHERE name LIKE ?`,
-                [`%${searchTerm}%`],
-                (_, results) => {
-                  console.log(results);
-                  const rows = results.rows;
-                  console.log(rows.length);
-  
-                  if (rows.length > 0) {
-                    const data = rows._array;
-                    setData(data);
-                  } 
-                }
-              );
+    if (searchTerm != '') {
+      try {
+        db.transaction(
+          (tx) => {
+            let query = `SELECT * FROM menu WHERE name LIKE ?`;
+            let params = [`%${searchTerm}%`];
+      
+            if (selectedCategory != null) {
+              query += ` AND category == ?`;
+              params.push(selectedCategory);
             }
-          );
-        } catch (error) {
-          console.error('Error in keywordSearch:', error);
-          reject(error);
-        }
-      ;
-    } else {
-      checkAndFetchData();
+      
+            tx.executeSql(
+              query,
+              params,
+              (_, results) => {
+                const rows = results.rows;      
+                if (rows.length > 0) {
+                  const data = rows._array;
+                  setData(data);
+                }
+              }
+            );
+          }
+        );
+      } catch (error) {
+        console.error('Error in keywordSearch:', error);
+        reject(error);
+      }
     }
   };
 
@@ -91,32 +80,28 @@ export default function Home({navigation}) {
               [],
               (_, results) => {
                 const rows = results.rows;
-  
                 if (rows.length > 0) {
-                  // Data exists in the database, use it
-                  const data = rows._array; // Convert rows to an array
+                  const data = rows._array; 
                   setData(data);
                   resolve(data);
                 } else {
-                  // Data doesn't exist in the database, fetch and store it
                   fetchDataAndStoreInDatabase()
                     .then((data) => {
-                      resolve(data); // Resolve with the fetched data
+                      resolve(data); 
                     })
                     .catch((fetchError) => {
-                      reject(fetchError); // Reject if there's an error in fetching data
+                      reject(fetchError); 
                     });
                 }
               },
               (error) => {
                 reject(error);
-                console.log("3333333", error)
+                fetchDataAndStoreInDatabase()
               }
             );
           },
           (error) => {
             reject(error);
-            console.log("44444444", error)
           }
         );
       } catch (error) {
@@ -126,8 +111,14 @@ export default function Home({navigation}) {
     });
   };
 
-  const handleCategoryPress = async (category) => {
-    setSelectedCategory(category);
+  const handleCategoryPress = async (category, reset=true) => {
+    setSearchTerm('');
+    if (category == selectedCategory && reset) {
+      setSelectedCategory(null);
+      return checkAndFetchData();
+    } else {
+      setSelectedCategory(category);
+    }
     const db = SQLite.openDatabase('little_lemon.db');
   
     return new Promise((resolve, reject) => {
@@ -140,30 +131,25 @@ export default function Home({navigation}) {
                 [category],
                 (_, results) => {
                   const rows = results.rows;
-  
                   if (rows.length > 0) {
-                    // Data exists in the database, use it
-                    const data = rows._array; // Convert rows to an array
+                    const data = rows._array; 
                     setData(data);
                     resolve(data);
                   } else {
-                    // Data doesn't exist in the database, fetch and store it
-                    resolve([]); // Resolve with an empty array since no data is in the database
+                    resolve([]); 
                   }
                 },
                 (error) => {
                   reject(error);
-                  console.log("55555", error)
                 }
               );
             },
             (error) => {
               reject(error);
-              console.log("666666", error)
             }
           );
         } else {
-          resolve([]); // No need to execute the transaction, resolve with an empty array
+          resolve([]);
         }
       } catch (error) {
         console.error('Error in handleCategoryPress:', error);
@@ -172,19 +158,15 @@ export default function Home({navigation}) {
     });
   };
 
-  
   const fetchDataAndStoreInDatabase = async () => {
     try {
       const response = await fetch('https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/capstone.json');
       const jsonData = await response.json();
-      // Store the fetched data in the database
       storeDataInDatabase(jsonData.menu);
-      // Use the fetched data or set it in your component state
     } catch (error) {
-      console.log(error);
+      Promise.reject(error);
     }
   };
-  
 
   const storeDataInDatabase = (dataToStore) => {
     const db = SQLite.openDatabase('little_lemon.db');
@@ -197,33 +179,27 @@ export default function Home({navigation}) {
               'CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY, name TEXT, price REAL, description TEXT, image TEXT, category TEXT)',
               [],
               (_, results) => {
-                // Table creation success, proceed to insert data
                 dataToStore.forEach((item, index) => {
                   tx.executeSql(
                     'INSERT INTO menu (id, name, price, description, image, category) VALUES (?, ?, ?, ?, ?, ?)',
                     [index, item.name, item.price, item.description, item.image, item.category],
                     (_, results) => {
-                      // Insert success
                     },
                     (error) => {
                       reject(error);
-                      console.log("7777777", error)
                     }
                   );
                 });
               },
               (error) => {
                 reject(error);
-                console.log("888888", error)
               }
             );
           },
           (error) => {
             reject(error);
-            console.log("999999", error)
           },
           () => {
-            // Transaction completed successfully
             resolve();
           }
         );
@@ -257,7 +233,9 @@ export default function Home({navigation}) {
 
   return (
     <ScrollView style={{flex:1}}>
-      <View style={styles.mainHeader}>
+      {/* *****  Header Section is implemented via Stack Navigation Header Options ***** */}
+      {/* *****  Hero Section  ***** */}
+      <View style={styles.hero}>
         <Text style={styles.welcomeText}>Little Lemon</Text>
         <View style={styles.welcomeWrapper}>
           <View style={{width: '60%'}}>
@@ -271,10 +249,12 @@ export default function Home({navigation}) {
             />
           </View>
         </View>
-          <TextInput style={styles.input} onChangeText={setSearchTerm} />
+          <TextInput style={styles.input} onChangeText={setSearchTerm} value={searchTerm} />
           <SearchIcon/>
       </View>
-      <View style={styles.mainBody}>
+      
+      {/* *****  Menu Breakdown  ***** */}
+      <View style={styles.menuBreakdown}>
         <Text style={styles.h2}>ORDER FOR DELIVERY</Text>
 
         {menuCategories &&
@@ -295,7 +275,7 @@ export default function Home({navigation}) {
           />
         }
 
-
+        {/* *****  Food Menu List  ***** */}
         {data && 
         <FlatList
           scrollEnabled={false}
@@ -311,7 +291,7 @@ export default function Home({navigation}) {
 
 
 const styles = StyleSheet.create({
-  mainHeader: {
+  hero: {
     backgroundColor: '#495e57',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
@@ -319,7 +299,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     paddingVertical: 40,
   },
-  mainBody: {
+  menuBreakdown: {
     backgroundColor: '#ffffff',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',

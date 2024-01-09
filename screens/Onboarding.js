@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
-import { useCallback } from 'react';
-import { StyleSheet, Text, View, Pressable, TextInput} from 'react-native';
-import { useFonts } from 'expo-font';
+import { StyleSheet, Text, View, Pressable, TextInput, Image} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NavigationContainer } from '@react-navigation/native';
 
 
-export default function Onbarding({navigation}) {
-  
+export default function Onbarding({...props}) {
+
   const [userFirstName, setUserFirstName] = useState("");
   const [userLastName, setUserLastName] = useState("");
   const [userEmail, setUserEmail] = useState("");
+
+  const Logo = () => {
+    return (
+      <Image
+        style={styles.logo}
+        source={require('../assets/images/Logo.png')}
+      />
+    );
+  }
+
+  const handleOnboardingCompleted = props.onOnboardingCompleted;
 
   function loginAction() {
     if (userFirstName === "" && userLastName === "" && userEmail === "") {
@@ -57,7 +65,7 @@ export default function Onbarding({navigation}) {
       );
     } catch (error) {
     } finally {
-      navigation.navigate('Profile');
+      handleOnboardingCompleted();
     }
   };
 
@@ -80,6 +88,7 @@ export default function Onbarding({navigation}) {
   return (
     <>
       <View style={styles.main}>
+        <Logo />
         <Text style={styles.welcomeText}>Let us get to know you</Text>
         <Text style={styles.inputLabel}>First Name</Text>
         <TextInput style={styles.input} onChangeText={setUserFirstName} />
@@ -102,6 +111,12 @@ export default function Onbarding({navigation}) {
 }
 
 const styles = StyleSheet.create({
+  logo: {
+    width: '100%',
+    height: 70,
+    justifyContent: 'center',
+    marginBottom: 24
+  },
   main: {
     backgroundColor: '#cad3da',
     justifyContent: 'flex-start',
@@ -110,6 +125,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 30,
     paddingVertical: 40,
+    paddingTop: 100,
   },
   welcomeText: {
     fontSize: 24,

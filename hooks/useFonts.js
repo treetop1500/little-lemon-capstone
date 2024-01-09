@@ -1,7 +1,10 @@
-import * as Font from "expo-font";
- 
-export default useFonts = async () =>
+import * as Font from 'expo-font';
+
+const useFonts = async () => {
   await Font.loadAsync({
-    'Karla': require('../assets/fonts/Karla-Regular.ttf'),
-    'MarkaziText': require('../assets/fonts/MarkaziText-Regular.ttf'),
+    "Karla": require('../assets/fonts/Karla-Regular.ttf'),
+    "MarkaziText": require('../assets/fonts/MarkaziText-Regular.ttf'),
   });
+};
+
+export default useFonts;
