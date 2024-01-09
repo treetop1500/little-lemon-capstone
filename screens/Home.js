@@ -32,38 +32,49 @@ export default function Home() {
     if (searchTerm == "" && selectedCategory == null) {
       return checkAndFetchData();
     } else if (searchTerm == "" && selectedCategory != null) {
-      return handleCategoryPress(selectedCategory,false);
+      return handleCategoryPress(selectedCategory, false);
     }
-    const db = SQLite.openDatabase('little_lemon.db');
+  
+    const db = SQLite.openDatabase('little_lemon.db');Gr
   
     if (searchTerm != '') {
       try {
-        db.transaction(
-          (tx) => {
-            let query = `SELECT * FROM menu WHERE name LIKE ?`;
-            let params = [`%${searchTerm}%`];
-      
-            if (selectedCategory != null) {
-              query += ` AND category == ?`;
-              params.push(selectedCategory);
-            }
-      
-            tx.executeSql(
-              query,
-              params,
-              (_, results) => {
-                const rows = results.rows;      
-                if (rows.length > 0) {
-                  const data = rows._array;
-                  setData(data);
-                }
+        const data = await new Promise((resolve, reject) => {
+          db.transaction(
+            (tx) => {
+              let query = `SELECT * FROM menu WHERE name LIKE ?`;
+              let params = [`%${searchTerm}%`];
+  
+              if (selectedCategory != null) {
+                query += ` AND category == ?`;
+                params.push(selectedCategory);
               }
-            );
-          }
-        );
+  
+              tx.executeSql(
+                query,
+                params,
+                (_, results) => {
+                  const rows = results.rows;
+                  if (rows.length > 0) {
+                    const data = rows._array;
+                    setData(data);
+                    resolve(data);
+                  } else {
+                    resolve([]);
+                  }
+                }
+              );
+            },
+            (error) => {
+              reject(error);
+            }
+          );
+        });
+  
+        return data;
       } catch (error) {
         console.error('Error in keywordSearch:', error);
-        reject(error);
+        throw error;
       }
     }
   };
@@ -71,8 +82,8 @@ export default function Home() {
   const checkAndFetchData = async () => {
     const db = SQLite.openDatabase('little_lemon.db');
   
-    return new Promise((resolve, reject) => {
-      try {
+    try {
+      const data = await new Promise((resolve, reject) => {
         db.transaction(
           (tx) => {
             tx.executeSql(
@@ -81,22 +92,22 @@ export default function Home() {
               (_, results) => {
                 const rows = results.rows;
                 if (rows.length > 0) {
-                  const data = rows._array; 
+                  const data = rows._array;
                   setData(data);
                   resolve(data);
                 } else {
                   fetchDataAndStoreInDatabase()
                     .then((data) => {
-                      resolve(data); 
+                      resolve(data);
                     })
                     .catch((fetchError) => {
-                      reject(fetchError); 
+                      reject(fetchError);
                     });
                 }
               },
               (error) => {
                 reject(error);
-                fetchDataAndStoreInDatabase()
+                fetchDataAndStoreInDatabase();
               }
             );
           },
@@ -104,12 +115,15 @@ export default function Home() {
             reject(error);
           }
         );
-      } catch (error) {
-        console.error('Error in checkAndFetchData:', error);
-        reject(error);
-      }
-    });
+      });
+  
+      return data;
+    } catch (error) {
+      console.error('Error in checkAndFetchData:', error);
+      throw error;
+    }
   };
+
 
   const handleCategoryPress = async (category, reset=true) => {
     setSearchTerm('');
@@ -265,7 +279,7 @@ export default function Home() {
             scrollEnabled={false}
             data={menuCategories}
             renderItem={({item}) => 
-              <Pressable onPress={() => {handleCategoryPress(item)}} style={[styles.pill, selectedCategory === item && styles.selected]}>
+              <Pressable onPress={() => {handleCategoryPress(item)}} style={[styles.pill, selectedCategory == item && styles.selected]}>
                 <Text style={styles.pillText}>
                   {item}
                 </Text>

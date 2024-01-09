@@ -119,6 +119,7 @@ export default function App() {
 
   const handleOnboardingCompleted = () => {
     setIsOnboardingCompleted(true);
+    loadProfile();
   }
 
 
